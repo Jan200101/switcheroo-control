@@ -20,3 +20,10 @@ executable('switcheroo-control',
   install: true,
   install_dir: libexecdir,
 )
+
+configure_file(
+  input: 'switcherooctl.in',
+  output: 'switcherooctl',
+  configuration: version_conf,
+  install_dir: get_option('bindir')
+)

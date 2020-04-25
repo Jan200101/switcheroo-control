@@ -349,6 +349,27 @@ get_drm_cards (ControlData *data)
 	GPtrArray *cards;
 
 	cards = g_ptr_array_new_with_free_func ((GDestroyNotify) free_card_data);
+
+#if 0
+	{
+		CardData *card;
+		const char *env[] = {
+			"INTEL_AGP_OFFLOADING", "1",
+			"INTEL_PCI_MODE", "false",
+			NULL
+		};
+		guint i;
+
+		card = g_new0 (CardData, 1);
+		card->name = "Intel i740 “Auburn”";
+		card->env = g_ptr_array_new ();
+		for (i = 0; env[i] != NULL; i++)
+			g_ptr_array_add (card->env, g_strdup (env[i]));
+
+		g_ptr_array_add (cards, card);
+	}
+#endif
+
 	devices = g_udev_client_query_by_subsystem (data->client, "drm");
 	for (l = devices; l != NULL; l = l->next) {
 		GUdevDevice *d = l->data;

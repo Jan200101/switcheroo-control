@@ -1,8 +1,5 @@
 content_files = files()
 
-version_conf = configuration_data()
-version_conf.set('VERSION', meson.project_version())
-
 content_files += configure_file(
   input: 'version.xml.in',
   output: 'version.xml',

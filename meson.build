@@ -40,6 +40,9 @@ configure_file(
   copy: true,
 )
 
+version_conf = configuration_data()
+version_conf.set('VERSION', meson.project_version())
+
 subdir('data')
 subdir('src')
 

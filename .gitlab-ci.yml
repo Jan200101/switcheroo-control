@@ -9,6 +9,7 @@ variables:
                 glibc-devel
                 meson
                 git
+                libxslt
 
 build:
   before_script:

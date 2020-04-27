@@ -1,8 +1,17 @@
 image: fedora:rawhide
 
 variables:
-  DEPENDENCIES: glib2-devel libgudev-devel gtk-doc intltool autoconf automake
-                gcc gcc-c++ glibc-devel meson git
+  DEPENDENCIES: glib2-devel
+                libgudev-devel
+                gtk-doc
+                intltool
+                autoconf
+                automake
+                gcc
+                gcc-c++
+                glibc-devel
+                meson
+                git
 
 build:
   before_script:

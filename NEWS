@@ -1,3 +1,11 @@
+2.2
+---
+
+This release adds a command-line utility to launch specific commands on
+a specific GPU, or the first discrete one. See the reference documentation
+or the switcherooctl(1) man page for details. The build system was also
+ported to meson.
+
 2.1
 ---
 

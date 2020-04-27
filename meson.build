@@ -6,8 +6,7 @@ project('switcheroo-control', 'c',
     'warning_level=1',
     'c_std=c99',
   ],
-  # NOTE: We keep this pinned at 0.49 because that's what Debian 10 ships
-  meson_version : '>= 0.49.2',
+  meson_version : '>= 0.50.0',
 )
 
 cc = meson.get_compiler('c')

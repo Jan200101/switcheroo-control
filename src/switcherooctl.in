@@ -1,4 +1,4 @@
-#!/bin/python
+#!@PYTHON3@
 
 from gi.repository import Gio, GLib
 import sys, os

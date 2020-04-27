@@ -21,9 +21,16 @@ executable('switcheroo-control',
   install_dir: libexecdir,
 )
 
+python = import('python')
+py_installation = python.find_installation('python3', required: true)
+
+switcherooctl_conf = configuration_data()
+switcherooctl_conf.set('VERSION', meson.project_version())
+switcherooctl_conf.set('PYTHON3', py_installation.path())
+
 configure_file(
   input: 'switcherooctl.in',
   output: 'switcherooctl',
-  configuration: version_conf,
+  configuration: switcherooctl_conf,
   install_dir: get_option('bindir')
 )

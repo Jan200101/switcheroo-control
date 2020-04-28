@@ -1,3 +1,9 @@
+2.3
+---
+
+This release fixes the path to the interpreter for the switcherooctl
+tool added in 2.2.
+
 2.2
 ---
 

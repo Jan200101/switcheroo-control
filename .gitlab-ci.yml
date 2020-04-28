@@ -33,7 +33,7 @@ dist-job:
     - cd _build
     - ninja dist
     - ninja switcheroo-control-doc
-    - tar -c -f "switcheroo-control-docs-$CI_COMMIT_TAG.tar.xz" -C docs/ html
+    - tar -c -J -f "switcheroo-control-docs-$CI_COMMIT_TAG.tar.xz" -C docs/ html
   artifacts:
     paths:
       - "${CI_PROJECT_DIR}/_build/switcheroo-control-docs-$CI_COMMIT_TAG.tar.xz"

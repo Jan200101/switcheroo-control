@@ -201,9 +201,11 @@ name_acquired_handler (GDBusConnection *connection,
 }
 
 static gboolean
-setup_dbus (ControlData *data)
+setup_dbus (ControlData *data,
+	    gboolean     replace)
 {
 	GBytes *bytes;
+	GBusNameOwnerFlags flags;
 
 	bytes = g_resources_lookup_data ("/net/hadess/SwitcherooControl/net.hadess.SwitcherooControl.xml",
 					 G_RESOURCE_LOOKUP_FLAGS_NONE,
@@ -212,9 +214,13 @@ setup_dbus (ControlData *data)
 	g_bytes_unref (bytes);
 	g_assert (data->introspection_data != NULL);
 
+	flags = G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT;
+	if (replace)
+		flags |= G_BUS_NAME_OWNER_FLAGS_REPLACE;
+
 	data->name_id = g_bus_own_name (G_BUS_TYPE_SYSTEM,
 					CONTROL_PROXY_DBUS_NAME,
-					G_BUS_NAME_OWNER_FLAGS_NONE,
+					flags,
 					bus_acquired_handler,
 					name_acquired_handler,
 					name_lost_handler,
@@ -466,7 +472,7 @@ int main (int argc, char **argv)
 	data = g_new0 (ControlData, 1);
 
 	get_num_gpus (data);
-	setup_dbus (data);
+	setup_dbus (data, FALSE);
 	data->init_done = TRUE;
 	if (data->connection)
 		send_dbus_event (data);

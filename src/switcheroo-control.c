@@ -461,15 +461,37 @@ get_num_gpus (ControlData *data)
 int main (int argc, char **argv)
 {
 	ControlData *data;
+	g_autoptr(GOptionContext) option_context = NULL;
+	g_autoptr(GError) error = NULL;
+	gboolean verbose = FALSE;
+	gboolean add_fake_cards = FALSE;
+	gboolean replace = FALSE;
+	gboolean ret;
+	const GOptionEntry options[] = {
+		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose, "Show extra debugging information", NULL },
+		{ "fake", 'f', 0, G_OPTION_ARG_NONE, &add_fake_cards, "Add fake GPUs to the output", NULL },
+		{ "replace", 'r', 0, G_OPTION_ARG_NONE, &replace, "Replace the running instance of switcheroo-control", NULL },
+		{ NULL}
+	};
 
 	setlocale (LC_ALL, "");
+	option_context = g_option_context_new ("");
+	g_option_context_add_main_entries (option_context, options, NULL);
 
-	/* g_setenv ("G_MESSAGES_DEBUG", "all", TRUE); */
+	ret = g_option_context_parse (option_context, &argc, &argv, &error);
+	if (!ret) {
+		g_print ("Failed to parse arguments: %s\n", error->message);
+		return EXIT_FAILURE;
+	}
+
+	if (verbose)
+		g_setenv ("G_MESSAGES_DEBUG", "all", TRUE);
 
 	data = g_new0 (ControlData, 1);
+	data->add_fake_cards = add_fake_cards;
 
 	get_num_gpus (data);
-	setup_dbus (data, FALSE);
+	setup_dbus (data, replace);
 	data->init_done = TRUE;
 	if (data->connection)
 		send_dbus_event (data);

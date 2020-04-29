@@ -42,6 +42,7 @@ typedef struct {
 
 	/* Detection */
 	GUdevClient *client;
+	gboolean add_fake_cards;
 	guint num_gpus;
 	GPtrArray *cards; /* array of CardData */
 } ControlData;
@@ -348,7 +349,6 @@ get_card_data (GUdevClient *client,
 	return data;
 }
 
-#if 0
 static void
 add_fake_intel_card (GPtrArray *cards)
 {
@@ -387,7 +387,6 @@ add_fake_trident_card (GPtrArray *cards)
 
 	g_ptr_array_add (cards, card);
 }
-#endif
 
 static GPtrArray *
 get_drm_cards (ControlData *data)
@@ -397,9 +396,8 @@ get_drm_cards (ControlData *data)
 
 	cards = g_ptr_array_new_with_free_func ((GDestroyNotify) free_card_data);
 
-#if 0
-	add_fake_intel_card (cards);
-#endif
+	if (data->add_fake_cards)
+		add_fake_intel_card (cards);
 
 	devices = g_udev_client_query_by_subsystem (data->client, "drm");
 	for (l = devices; l != NULL; l = l->next) {
@@ -417,9 +415,8 @@ get_drm_cards (ControlData *data)
 	}
 	g_list_free (devices);
 
-#if 0
-	add_fake_trident_card (cards);
-#endif
+	if (data->add_fake_cards)
+		add_fake_trident_card (cards);
 
 	return cards;
 }

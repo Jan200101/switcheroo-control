@@ -37,6 +37,9 @@ You can use it to launch the [GLArea example application](https://github.com/eba
 to verify that the right video card/GPU is used when launching the application
 normally, and through “Launch using Dedicated Graphics Card”.
 
+Or run `make -C tests install` to install a test application that uses
+the `PrefersNonDefaultGPU` `.desktop` property.
+
 Tested on
 ---------
 

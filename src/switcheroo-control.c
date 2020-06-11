@@ -289,8 +289,15 @@ get_card_env (GUdevClient *client,
 		/* See the Mesa loader code:
 		 * https://gitlab.freedesktop.org/mesa/mesa/blob/master/src/loader/loader.c#L322 */
 		id = get_card_id_path (client, dev, parent);
-		g_ptr_array_add (array, g_strdup ("DRI_PRIME"));
-		g_ptr_array_add (array, id);
+		if (id != NULL) {
+			g_ptr_array_add (array, g_strdup ("DRI_PRIME"));
+			g_ptr_array_add (array, id);
+		}
+	}
+
+	if (array->len == 0) {
+		g_ptr_array_free (array, TRUE);
+		return NULL;
 	}
 
 	return array;
@@ -339,11 +346,17 @@ get_card_data (GUdevClient *client,
 	       GUdevDevice *d)
 {
 	CardData *data;
+	GPtrArray *env;
+
+	/* If the sibling "card" drm device isn't ready yet */
+	env = get_card_env (client, d);
+	if (!env)
+		return NULL;
 
 	data = g_new0 (CardData, 1);
 	data->dev = g_object_ref (d);
 	data->name = get_card_name (d);
-	data->env = get_card_env (client, d);
+	data->env = env;
 	data->is_default = get_card_is_default (d);
 
 	return data;
@@ -409,7 +422,8 @@ get_drm_cards (ControlData *data)
 		    g_str_has_prefix (path, "/dev/dri/render")) {
 			CardData *card;
 			card = get_card_data (data->client, d);
-			g_ptr_array_add (cards, card);
+			if (card)
+				g_ptr_array_add (cards, card);
 		}
 		g_object_unref (d);
 	}

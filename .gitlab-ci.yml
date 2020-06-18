@@ -10,6 +10,9 @@ variables:
                 meson
                 git
                 libxslt
+                python3-gobject
+                python3-dbusmock
+                umockdev
 
 build:
   before_script:
@@ -21,6 +24,7 @@ build:
     - ninja -v -C _build install
     - ninja -v -C _build uninstall
     - ninja -v -C _build dist
+    - meson test -C _build
 
 dist-job:
   stage: build

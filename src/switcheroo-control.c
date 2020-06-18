@@ -231,39 +231,6 @@ setup_dbus (ControlData *data,
 	return TRUE;
 }
 
-static char *
-get_card_id_path (GUdevClient *client,
-		  GUdevDevice *dev,
-		  GUdevDevice *parent)
-{
-	GList *devices, *l;
-	char *ret = NULL;
-
-	/* Metadata from the sibling "card" device */
-	devices = g_udev_client_query_by_subsystem (client, "drm");
-	for (l = devices; l != NULL; l = l->next) {
-		GUdevDevice *d = l->data;
-		g_autoptr(GUdevDevice) p = NULL;
-		const char *path;
-
-		p = g_udev_device_get_parent (d);
-		if (g_strcmp0 (g_udev_device_get_sysfs_path (p),
-			       g_udev_device_get_sysfs_path (parent)) != 0) {
-			continue;
-		}
-
-		path = g_udev_device_get_device_file (d);
-		if (path != NULL &&
-		    g_str_has_prefix (path, "/dev/dri/card")) {
-			ret = g_strdup (g_udev_device_get_property (d, "ID_PATH_TAG"));
-			break;
-		}
-	}
-	g_list_free_full (devices, (GDestroyNotify) g_object_unref);
-
-	return ret;
-}
-
 static GPtrArray *
 get_card_env (GUdevClient *client,
 	      GUdevDevice *dev)
@@ -288,7 +255,7 @@ get_card_env (GUdevClient *client,
 
 		/* See the Mesa loader code:
 		 * https://gitlab.freedesktop.org/mesa/mesa/blob/master/src/loader/loader.c#L322 */
-		id = get_card_id_path (client, dev, parent);
+		id = g_strdup (g_udev_device_get_property (dev, "ID_PATH_TAG"));
 		if (id != NULL) {
 			g_ptr_array_add (array, g_strdup ("DRI_PRIME"));
 			g_ptr_array_add (array, id);
@@ -348,7 +315,6 @@ get_card_data (GUdevClient *client,
 	CardData *data;
 	GPtrArray *env;
 
-	/* If the sibling "card" drm device isn't ready yet */
 	env = get_card_env (client, d);
 	if (!env)
 		return NULL;

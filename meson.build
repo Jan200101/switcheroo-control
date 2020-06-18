@@ -45,3 +45,5 @@ subdir('src')
 if get_option('gtk_doc')
   subdir('docs')
 endif
+
+subdir('tests')

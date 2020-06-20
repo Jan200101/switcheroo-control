@@ -366,6 +366,24 @@ class Tests(dbusmock.DBusTestCase):
 
         self.stop_daemon()
 
+    def test_dual_hotplug(self):
+        '''dual open source devices'''
+
+        self.add_intel_gpu()
+
+        self.start_daemon()
+        self.assertEqual(self.get_dbus_property('HasDualGpu'), False)
+        self.assertEqual(self.get_dbus_property('NumGPUs'), 1)
+
+        self.add_nouveau_gpu()
+
+        self.assertEqual(self.get_dbus_property('HasDualGpu'), True)
+        self.assertEqual(self.get_dbus_property('NumGPUs'), 2)
+
+        # process = subprocess.Popen(['gdbus', 'introspect', '--system', '--dest', 'net.hadess.SwitcherooControl', '--object-path', '/net/hadess/SwitcherooControl'])
+
+        self.stop_daemon()
+
     #
     # Helper methods
     #

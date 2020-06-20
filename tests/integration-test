@@ -128,10 +128,6 @@ class Tests(dbusmock.DBusTestCase):
     def start_daemon(self):
         '''Start daemon and create DBus proxy.
 
-        Do this after adding the devices you want to test with. At the moment
-        this only works with coldplugging, as we do not currently have a way to
-        inject simulated uevents.
-
         When done, this sets self.proxy as the Gio.DBusProxy for switcheroo-control.
         '''
         env = os.environ.copy()

@@ -8,10 +8,9 @@ developer information.
 
 Installation
 ------------
-```
-./configure --prefix=/usr --sysconfdir=/etc
-make
-make install
+```sh
+$ meson _build -Dprefix=/usr
+$ ninja -v -C _build install
 ```
 It requires libgudev and systemd.
 

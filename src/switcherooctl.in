@@ -166,7 +166,9 @@ elif command == 'version':
 elif command == 'launch':
     if len(args) == 0:
         sys.exit(0)
-    if args[0] == '--gpu' or args[0] == '-g':
+    if args[0][:5] == '--gpu' or args[0] == '-g':
+        if args[0][:6] == '--gpu=':
+            args = args[0].split('=') + args[1:]
         if len(args) == 2:
             sys.exit(0)
         if len(args) == 1:

@@ -250,6 +250,10 @@ get_card_env (GUdevClient *client,
 		 * https://download.nvidia.com/XFree86/Linux-x86_64/440.26/README/primerenderoffload.html */
 		g_ptr_array_add (array, g_strdup ("__NV_PRIME_RENDER_OFFLOAD"));
 		g_ptr_array_add (array, g_strdup ("1"));
+
+		/* Make sure Vulkan apps always select Nvidia GPUs */
+		g_ptr_array_add (array, g_strdup ("__VK_LAYER_NV_optimus"));
+		g_ptr_array_add (array, g_strdup ("NVIDIA_only"));
 	} else {
 		char *id;
 

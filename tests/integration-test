@@ -335,7 +335,7 @@ class Tests(dbusmock.DBusTestCase):
 
         self.stop_daemon()
 
-    def test_dual_open_source(self):
+    def test_dual_open_source_with_ttm(self):
         '''dual open source devices'''
 
         self.add_intel_gpu()

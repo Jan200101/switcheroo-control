@@ -399,6 +399,44 @@ class Tests(dbusmock.DBusTestCase):
 
         self.stop_daemon()
 
+    def test_dual_proprietary(self):
+        '''oss intel + nvidia blob'''
+
+        self.add_intel_gpu()
+        self.add_nvidia_gpu()
+
+        self.start_daemon()
+        self.assertEqual(self.get_dbus_property('HasDualGpu'), True)
+        self.assertEqual(self.get_dbus_property('NumGPUs'), 2)
+
+        gpus = self.get_dbus_property('GPUs')
+        self.assertEqual(len(gpus), 2)
+
+        gpu1 = gpus[0]
+        self.assertEqual(gpu1['Name'], 'NVIDIA Corporation GP106 [GeForce GTX 1060 6GB]')
+        self.assertEqual(gpu1['Default'], False)
+
+        gpu2 = gpus[1]
+        self.assertEqual(gpu2['Name'], 'Intel® UHD Graphics 620 (Kabylake GT2)')
+        self.assertEqual(gpu2['Default'], True)
+
+        sc_env = gpu1['Environment']
+
+        self.assertIn('__GLX_VENDOR_LIBRARY_NAME', sc_env)
+        self.assertIn('__NV_PRIME_RENDER_OFFLOAD', sc_env)
+        self.assertIn('__VK_LAYER_NV_optimus', sc_env)
+
+        def get_sc_env(name):
+            i = sc_env.index(name)
+            return sc_env[i+1]
+
+        self.assertEqual(get_sc_env('__GLX_VENDOR_LIBRARY_NAME'), 'nvidia')
+        self.assertEqual(get_sc_env('__NV_PRIME_RENDER_OFFLOAD'), '1')
+        self.assertEqual(get_sc_env('__VK_LAYER_NV_optimus'), 'NVIDIA_only')
+
+        self.stop_daemon()
+
+
     def test_dual_hotplug(self):
         '''dual open source devices'''
 

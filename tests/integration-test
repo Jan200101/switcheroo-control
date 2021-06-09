@@ -275,6 +275,39 @@ class Tests(dbusmock.DBusTestCase):
                   'ID_PATH_TAG', 'pci-0000_01_00_0' ]
                 )
 
+    def add_nvidia_gpu(self):
+        parent = self.testbed.add_device('pci', 'NVidia VGA controller', None,
+                [ 'boot_vga', '0' ],
+                [ 'DRIVER', 'nvidia',
+                  'PCI_CLASS', '30000',
+                  'PCI_ID', '10DE:1C03',
+                  'PCI_SUBSYS_ID', '1043:85AC'
+                  'PCI_SLOT_NAME', '0000:01:00.0'
+                  'MODALIAS', 'pci:v000010DEd00001C03sv00001043sd000085ACbc03sc00i00',
+                  'ID_PCI_CLASS_FROM_DATABASE', 'Display controller',
+                  'ID_PCI_SUBCLASS_FROM_DATABASE', 'VGA compatible controller',
+                  'ID_PCI_INTERFACE_FROM_DATABASE', 'VGA controller',
+                  'ID_VENDOR_FROM_DATABASE', 'NVIDIA Corporation',
+                  'ID_MODEL_FROM_DATABASE', 'GP106 [GeForce GTX 1060 6GB]',
+                  'FWUPD_GUID', '0x10de:0x85ac' ]
+                )
+
+        self.testbed.set_attribute_link(parent, 'driver', '../../nvidia')
+
+        self.testbed.add_device('drm', 'dri/card1', parent,
+                [],
+                [ 'DEVNAME', '/dev/dri/card1',
+                  'ID_PATH', 'pci-0000:01:00.0',
+                  'ID_PATH_TAG', 'pci-0000_01_00_0' ]
+                )
+
+        self.testbed.add_device('drm', 'dri/renderD129', parent,
+                [],
+                [ 'DEVNAME', '/dev/dri/renderD129',
+                  'ID_PATH', 'pci-0000:01:00.0',
+                  'ID_PATH_TAG', 'pci-0000_01_00_0' ]
+                )
+
     #
     # Actual test cases
     #

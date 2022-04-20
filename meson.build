@@ -13,7 +13,7 @@ cc = meson.get_compiler('c')
 
 prefix = get_option('prefix')
 libexecdir = prefix / get_option('libexecdir')
-sysconfdir = get_option('sysconfdir')
+datadir = get_option('datadir')
 
 gnome = import('gnome')
 

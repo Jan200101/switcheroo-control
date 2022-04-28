@@ -231,12 +231,63 @@ setup_dbus (ControlData *data,
 	return TRUE;
 }
 
+static void
+add_vulkan_icd_from_dir (GString *string,
+			 const char *path,
+			 const char *driver)
+{
+	GDir *dir;
+	const char *basename;
+
+	dir = g_dir_open (path, 0, NULL);
+	if (!dir)
+		return;
+	while ((basename = g_dir_read_name (dir)) != NULL) {
+		g_autofree char *icd_file = NULL;
+
+		if (strstr (basename, driver) == NULL)
+			continue;
+		icd_file = g_build_filename (path, basename, NULL);
+		if (string->len != 0)
+			g_string_append_c (string, ':');
+		g_string_append (string, icd_file);
+	}
+	g_dir_close (dir);
+}
+
+static char *
+get_vulkan_icd (const char *driver)
+{
+	const gchar * const *dirs;
+	const char *vk_driver;
+	GString *s;
+	guint i;
+
+	if (!driver)
+		return NULL;
+
+	vk_driver = driver;
+	if (g_str_equal (driver, "i915"))
+		vk_driver = "intel";
+
+	dirs = g_get_system_data_dirs ();
+	s = g_string_new (NULL);
+	for (i = 0; dirs[i] != NULL; i++) {
+		g_autofree char *vk_dir = NULL;
+
+		vk_dir = g_build_filename (dirs[i], "vulkan/icd.d", NULL);
+		add_vulkan_icd_from_dir (s, vk_dir, vk_driver);
+	}
+	return g_string_free (s, s->len == 0);
+}
+
 static GPtrArray *
 get_card_env (GUdevClient *client,
 	      GUdevDevice *dev)
 {
 	GPtrArray *array;
 	g_autoptr(GUdevDevice) parent;
+	char *icd_filenames;
 
 	array = g_ptr_array_new_full (0, g_free);
 
@@ -264,6 +315,13 @@ get_card_env (GUdevClient *client,
 			g_ptr_array_add (array, g_strdup ("DRI_PRIME"));
 			g_ptr_array_add (array, id);
 		}
+	}
+
+	/* XXX: this doesn't work with multi-radeon or multi-nvidia setups */
+	icd_filenames = get_vulkan_icd (g_udev_device_get_driver (parent));
+	if (icd_filenames != NULL) {
+		g_ptr_array_add (array, g_strdup ("VK_ICD_FILENAMES"));
+		g_ptr_array_add (array, icd_filenames);
 	}
 
 	if (array->len == 0) {

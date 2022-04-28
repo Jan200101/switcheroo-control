@@ -22,6 +22,7 @@ import os
 import sys
 import dbus
 import tempfile
+import re
 import subprocess
 import unittest
 import time
@@ -104,6 +105,8 @@ class Tests(dbusmock.DBusTestCase):
         The testbed is initially empty.
         '''
         self.testbed = UMockdev.Testbed.new()
+        self.xdg_dir = self.testbed.get_root_dir() + '/share'
+        os.makedirs(self.xdg_dir)
 
         self.proxy = None
         self.log = None
@@ -136,6 +139,7 @@ class Tests(dbusmock.DBusTestCase):
         # note: Python doesn't propagate the setenv from Testbed.new(), so we
         # have to do that ourselves
         env['UMOCKDEV_DIR'] = self.testbed.get_root_dir()
+        env['XDG_DATA_DIRS'] = self.xdg_dir + ':/usr/local/share/:/usr/share/'
         self.log = tempfile.NamedTemporaryFile()
         if os.getenv('VALGRIND') != None:
             if self.local_daemon:
@@ -231,6 +235,8 @@ class Tests(dbusmock.DBusTestCase):
                   'FWUPD_GUID', '0x8086:0x5917' ]
                 )
 
+        self.testbed.set_attribute_link(parent, 'driver', '../../i915')
+
         self.testbed.add_device('drm', 'dri/card0', parent,
                 [],
                 [ 'DEVNAME', '/dev/dri/card0',
@@ -260,6 +266,8 @@ class Tests(dbusmock.DBusTestCase):
                   'ID_MODEL_FROM_DATABASE', 'GM108M [GeForce 930MX]',
                   'FWUPD_GUID', '0x10de:0x134e' ]
                 )
+
+        self.testbed.set_attribute_link(parent, 'driver', '../../nouveau')
 
         self.testbed.add_device('drm', 'dri/card1', parent,
                 [],
@@ -325,9 +333,13 @@ class Tests(dbusmock.DBusTestCase):
         self.assertEqual(len(gpus), 1)
         self.assertEqual(gpus[0]['Name'], 'Intel® UHD Graphics 620 (Kabylake GT2)')
         sc_env = gpus[0]['Environment']
-        self.assertEqual(len(sc_env), 2)
+
+        self.assertEqual(len(sc_env), 4)
         self.assertEqual(sc_env[0], 'DRI_PRIME')
         self.assertEqual(sc_env[1], 'pci-0000_00_02_0')
+        self.assertEqual(sc_env[2], 'VK_ICD_FILENAMES')
+        regex = re.compile('/usr/share/vulkan/icd\.d/intel_icd\..*json:/usr/share/vulkan/icd.d/intel_icd\..*json')
+        self.assertRegex(sc_env[3], regex)
         self.assertEqual(gpus[0]['Default'], True)
 
         # process = subprocess.Popen(['gdbus', 'introspect', '--system', '--dest', 'net.hadess.SwitcherooControl', '--object-path', '/net/hadess/SwitcherooControl'])
@@ -359,9 +371,13 @@ class Tests(dbusmock.DBusTestCase):
         gpu = gpus[1]
         self.assertEqual(gpu['Name'], 'Intel® UHD Graphics 620 (Kabylake GT2)')
         sc_env = gpu['Environment']
-        self.assertEqual(len(sc_env), 2)
+        self.assertEqual(len(sc_env), 4)
         self.assertEqual(sc_env[0], 'DRI_PRIME')
         self.assertEqual(sc_env[1], 'pci-0000_00_02_0')
+        self.assertEqual(sc_env[2], 'VK_ICD_FILENAMES')
+        icds = sc_env[3].split(':')
+        self.assertTrue('/usr/share/vulkan/icd.d/intel_icd.x86_64.json' in icds)
+        self.assertTrue('/usr/share/vulkan/icd.d/intel_icd.i686.json' in icds)
         self.assertEqual(gpu['Default'], True)
 
         # process = subprocess.Popen(['gdbus', 'introspect', '--system', '--dest', 'net.hadess.SwitcherooControl', '--object-path', '/net/hadess/SwitcherooControl'])
@@ -405,6 +421,11 @@ class Tests(dbusmock.DBusTestCase):
         self.add_intel_gpu()
         self.add_nvidia_gpu()
 
+        vk_dir = os.path.join(self.xdg_dir, 'vulkan/icd.d')
+        os.makedirs(vk_dir)
+        with open(os.path.join(vk_dir, 'nvidia_icd.json'), 'w') as json:
+            json.write('')
+
         self.start_daemon()
         self.assertEqual(self.get_dbus_property('HasDualGpu'), True)
         self.assertEqual(self.get_dbus_property('NumGPUs'), 2)
@@ -425,6 +446,7 @@ class Tests(dbusmock.DBusTestCase):
         self.assertIn('__GLX_VENDOR_LIBRARY_NAME', sc_env)
         self.assertIn('__NV_PRIME_RENDER_OFFLOAD', sc_env)
         self.assertIn('__VK_LAYER_NV_optimus', sc_env)
+        self.assertIn('VK_ICD_FILENAMES', sc_env)
 
         def get_sc_env(name):
             i = sc_env.index(name)
@@ -433,6 +455,7 @@ class Tests(dbusmock.DBusTestCase):
         self.assertEqual(get_sc_env('__GLX_VENDOR_LIBRARY_NAME'), 'nvidia')
         self.assertEqual(get_sc_env('__NV_PRIME_RENDER_OFFLOAD'), '1')
         self.assertEqual(get_sc_env('__VK_LAYER_NV_optimus'), 'NVIDIA_only')
+        self.assertEqual(get_sc_env('VK_ICD_FILENAMES'), vk_dir + '/nvidia_icd.json')
 
         self.stop_daemon()
 
@@ -467,7 +490,8 @@ class Tests(dbusmock.DBusTestCase):
 
         out = subprocess.run([tool_path], capture_output=True)
         self.assertEqual(out.returncode, 0, "'switcherooctl' call failed")
-        self.assertEqual(out.stdout, b'Device: 0\n  Name:        Intel\xc2\xae UHD Graphics 620 (Kabylake GT2)\n  Default:     yes\n  Environment: DRI_PRIME=pci-0000_00_02_0\n\nDevice: 1\n  Name:        GM108M [GeForce 930MX]\n  Default:     no\n  Environment: DRI_PRIME=pci-0000_01_00_0\n')
+        regex = re.compile('Device: 0.*\n.*Intel.*UHD Graphics 620 \(Kabylake GT2\)\n  Default:     yes\n  Environment: DRI_PRIME=pci-0000_00_02_0 VK_ICD_FILENAMES=/usr/share/vulkan/icd\.d/intel_icd\..*json:/usr/share/vulkan/icd.d/intel_icd\..*json\n\nDevice: 1\n  Name:        GM108M \[GeForce 930MX\]\n  Default:     no\n', re.M)
+        self.assertRegex(out.stdout.decode('UTF-8'), regex)
 
         out = subprocess.run([tool_path, 'launch', '--gpu', '0', 'env'], capture_output=True)
         self.assertEqual(out.returncode, 0, "'switcherooctl launch --gpu 0' failed")

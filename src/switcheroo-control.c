@@ -231,12 +231,33 @@ setup_dbus (ControlData *data,
 	return TRUE;
 }
 
+static const char *
+get_vk_driver_match (const char *driver)
+{
+	struct {
+		const char *kernel_driver;
+		const char *match;
+	} matches[] = {
+		{ "i915", "*intel*" },
+		{ "nvidia", "*nvidia*" },
+		{ "radeon", "*radeon*" }
+	};
+	guint i;
+
+	for (i = 0; i < G_N_ELEMENTS(matches); i++) {
+		if (g_strcmp0 (driver, matches[i].kernel_driver) == 0)
+			return matches[i].match;
+	}
+	return NULL;
+}
+
 static GPtrArray *
 get_card_env (GUdevClient *client,
 	      GUdevDevice *dev)
 {
 	GPtrArray *array;
 	g_autoptr(GUdevDevice) parent = NULL;
+	const char *vk_driver_match;
 
 	array = g_ptr_array_new_full (0, g_free);
 
@@ -266,6 +287,13 @@ get_card_env (GUdevClient *client,
 			g_ptr_array_add (array, g_strdup ("MESA_VK_DEVICE_SELECT"));
 			g_ptr_array_add (array, g_strdup (id));
 		}
+	}
+
+	/* XXX: this doesn't work with multi-nvidia setups */
+	vk_driver_match = get_vk_driver_match (g_udev_device_get_driver (parent));
+	if (vk_driver_match != NULL) {
+		g_ptr_array_add (array, g_strdup ("VK_LOADER_DRIVER_SELECT"));
+		g_ptr_array_add (array, g_strdup (vk_driver_match));
 	}
 
 	if (array->len == 0) {

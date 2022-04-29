@@ -1,3 +1,12 @@
+2.5
+---
+
+This release adds support for setting the GPU to use for Vulkan apps, on
+systems with heterogenous GPUs.
+
+This release also fixes the "--gpu" option not working as documented, and
+installs the D-Bus configuration file in the correct location.
+
 2.4
 ---
 

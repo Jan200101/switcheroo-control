@@ -286,7 +286,7 @@ get_card_env (GUdevClient *client,
 	      GUdevDevice *dev)
 {
 	GPtrArray *array;
-	g_autoptr(GUdevDevice) parent;
+	g_autoptr(GUdevDevice) parent = NULL;
 	char *icd_filenames;
 
 	array = g_ptr_array_new_full (0, g_free);
@@ -336,7 +336,7 @@ static char *
 get_card_name (GUdevDevice *d)
 {
 	const char *vendor, *product;
-	g_autoptr(GUdevDevice) parent;
+	g_autoptr(GUdevDevice) parent = NULL;
 	g_autofree char *renderer = NULL;
 
 	parent = g_udev_device_get_parent (d);
@@ -364,7 +364,7 @@ bail:
 static gboolean
 get_card_is_default (GUdevDevice *d)
 {
-	g_autoptr(GUdevDevice) parent;
+	g_autoptr(GUdevDevice) parent = NULL;
 
 	parent = g_udev_device_get_parent (d);
 	return g_udev_device_get_sysfs_attr_as_boolean (parent, "boot_vga");

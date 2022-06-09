@@ -460,6 +460,12 @@ get_drm_cards (ControlData *data)
 	if (data->add_fake_cards)
 		add_fake_trident_card (cards);
 
+	/* Make sure the only card is the default */
+	if (cards->len == 1) {
+		CardData *card = cards->pdata[0];
+		card->is_default = TRUE;
+	}
+
 	return cards;
 }
 

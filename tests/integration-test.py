@@ -316,6 +316,35 @@ class Tests(dbusmock.DBusTestCase):
                   'ID_PATH_TAG', 'pci-0000_01_00_0' ]
                 )
 
+    def add_vc4_gpu(self):
+        parent = self.testbed.add_device('platform', 'VC4 platform device', None,
+                [],
+                [ 'DRIVER', 'vc4-drm',
+                  'OF_NAME', 'gpu',
+                  'OF_FULLNAME', '/soc/gpu',
+                  'OF_COMPATIBLE_0', 'brcm,bcm2835-vc4',
+                  'OF_COMPATIBLE_N', '1',
+                  'MODALIAS', 'of:NgpuT(null)Cbrcm,bcm2835-vc4',
+                  'ID_PATH', 'platform-soc:gpu',
+                  'ID_PATH_TAG', 'platform-soc_gpu' ]
+                )
+
+        self.testbed.set_attribute_link(parent, 'driver', '../../vc4-drm')
+
+        self.testbed.add_device('drm', 'dri/card1', parent,
+                [],
+                [ 'DEVNAME', '/dev/dri/card1',
+                  'ID_PATH', 'platform-soc:gpu',
+                  'ID_PATH_TAG', 'platform-soc_gpu' ]
+                )
+
+        self.testbed.add_device('drm', 'dri/renderD129', parent,
+                [],
+                [ 'DEVNAME', '/dev/dri/renderD129',
+                  'ID_PATH', 'platform-soc:gpu',
+                  'ID_PATH_TAG', 'platform-soc_gpu' ]
+                )
+
     #
     # Actual test cases
     #
@@ -340,6 +369,28 @@ class Tests(dbusmock.DBusTestCase):
         self.assertEqual(sc_env[2], 'VK_ICD_FILENAMES')
         regex = re.compile('/usr/share/vulkan/icd\.d/intel_icd\..*json:/usr/share/vulkan/icd.d/intel_icd\..*json')
         self.assertRegex(sc_env[3], regex)
+        self.assertEqual(gpus[0]['Default'], True)
+
+        # process = subprocess.Popen(['gdbus', 'introspect', '--system', '--dest', 'net.hadess.SwitcherooControl', '--object-path', '/net/hadess/SwitcherooControl'])
+        # print (self.get_dbus_property('GPUs'))
+
+        self.stop_daemon()
+
+    def test_rpi(self):
+        self.add_vc4_gpu()
+
+        self.start_daemon()
+        self.assertEqual(self.get_dbus_property('HasDualGpu'), False)
+        self.assertEqual(self.get_dbus_property('NumGPUs'), 1)
+
+        gpus = self.get_dbus_property('GPUs')
+        self.assertEqual(len(gpus), 1)
+        self.assertEqual(gpus[0]['Name'], 'Unknown Graphics Controller')
+        sc_env = gpus[0]['Environment']
+
+        self.assertEqual(len(sc_env), 2)
+        self.assertEqual(sc_env[0], 'DRI_PRIME')
+        self.assertEqual(sc_env[1], 'platform-soc_gpu')
         self.assertEqual(gpus[0]['Default'], True)
 
         # process = subprocess.Popen(['gdbus', 'introspect', '--system', '--dest', 'net.hadess.SwitcherooControl', '--object-path', '/net/hadess/SwitcherooControl'])

@@ -108,7 +108,12 @@ def get_gpus():
         raise ReferenceError
     else:
         # Move the first GPU to the front, it's the default
-        default_gpu = next(gpu for gpu in gpus if gpu['Default'])
+        try:
+            default_gpu = next(gpu for gpu in gpus if gpu['Default'])
+        except:
+            # The first GPU is the default if there's no default
+            default_gpu = gpus[0]
+            pass
         gpus.remove(default_gpu)
         gpus.insert(0, default_gpu)
         return gpus

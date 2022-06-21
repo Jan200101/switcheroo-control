@@ -13,8 +13,6 @@ variables:
                 python3-gobject
                 python3-dbusmock
                 umockdev
-                mesa-vulkan-drivers.x86_64
-                mesa-vulkan-drivers.i686
   DIST_DEPENDENCIES: xz
 
 build:

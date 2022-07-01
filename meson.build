@@ -1,5 +1,5 @@
 project('switcheroo-control', 'c',
-  version : '2.5',
+  version : '2.6',
   license: 'GPLv3+',
   default_options : [
     'buildtype=debugoptimized',

@@ -1,3 +1,12 @@
+2.6
+---
+
+This release removes the recently added support for setting the GPU for
+Vulkan apps as this broke sandboxed Vulkan apps. The support should come
+back soon when functionality gets added to VulkanLoader.
+
+This release also fixes non-x86 platforms not having a default GPU.
+
 2.5
 ---
 

@@ -46,4 +46,6 @@ if get_option('gtk_doc')
   subdir('docs')
 endif
 
-subdir('tests')
+if get_option('tests')
+  subdir('tests')
+endif

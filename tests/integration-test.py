@@ -22,6 +22,7 @@ import os
 import sys
 import dbus
 import tempfile
+import re
 import subprocess
 import unittest
 import time
@@ -101,6 +102,8 @@ class Tests(dbusmock.DBusTestCase):
         The testbed is initially empty.
         '''
         self.testbed = UMockdev.Testbed.new()
+        self.xdg_dir = self.testbed.get_root_dir() + '/share'
+        os.makedirs(self.xdg_dir)
 
         self.proxy = None
         self.log = None
@@ -133,6 +136,7 @@ class Tests(dbusmock.DBusTestCase):
         # note: Python doesn't propagate the setenv from Testbed.new(), so we
         # have to do that ourselves
         env['UMOCKDEV_DIR'] = self.testbed.get_root_dir()
+        env['XDG_DATA_DIRS'] = self.xdg_dir + ':/usr/local/share/:/usr/share/'
         self.log = tempfile.NamedTemporaryFile()
         if os.getenv('VALGRIND') != None:
             daemon_path = ['valgrind', self.daemon_path, '-v']
@@ -225,6 +229,8 @@ class Tests(dbusmock.DBusTestCase):
                   'FWUPD_GUID', '0x8086:0x5917' ]
                 )
 
+        self.testbed.set_attribute_link(parent, 'driver', '../../i915')
+
         self.testbed.add_device('drm', 'dri/card0', parent,
                 [],
                 [ 'DEVNAME', '/dev/dri/card0',
@@ -254,6 +260,8 @@ class Tests(dbusmock.DBusTestCase):
                   'ID_MODEL_FROM_DATABASE', 'GM108M [GeForce 930MX]',
                   'FWUPD_GUID', '0x10de:0x134e' ]
                 )
+
+        self.testbed.set_attribute_link(parent, 'driver', '../../nouveau')
 
         self.testbed.add_device('drm', 'dri/card1', parent,
                 [],
@@ -348,9 +356,14 @@ class Tests(dbusmock.DBusTestCase):
         self.assertEqual(len(gpus), 1)
         self.assertEqual(gpus[0]['Name'], 'Intel® UHD Graphics 620 (Kabylake GT2)')
         sc_env = gpus[0]['Environment']
-        self.assertEqual(len(sc_env), 2)
+
+        self.assertEqual(len(sc_env), 6)
         self.assertEqual(sc_env[0], 'DRI_PRIME')
         self.assertEqual(sc_env[1], 'pci-0000_00_02_0')
+        self.assertEqual(sc_env[2], 'MESA_VK_DEVICE_SELECT')
+        self.assertEqual(sc_env[3], 'pci-0000_00_02_0')
+        self.assertEqual(sc_env[4], 'VK_LOADER_DRIVER_SELECT')
+        self.assertEqual(sc_env[5], '*intel*')
         self.assertEqual(gpus[0]['Default'], True)
 
         # process = subprocess.Popen(['gdbus', 'introspect', '--system', '--dest', 'net.hadess.SwitcherooControl', '--object-path', '/net/hadess/SwitcherooControl'])
@@ -370,9 +383,11 @@ class Tests(dbusmock.DBusTestCase):
         self.assertEqual(gpus[0]['Name'], 'Unknown Graphics Controller')
         sc_env = gpus[0]['Environment']
 
-        self.assertEqual(len(sc_env), 2)
+        self.assertEqual(len(sc_env), 4)
         self.assertEqual(sc_env[0], 'DRI_PRIME')
         self.assertEqual(sc_env[1], 'platform-soc_gpu')
+        self.assertEqual(sc_env[2], 'MESA_VK_DEVICE_SELECT')
+        self.assertEqual(sc_env[3], 'platform-soc_gpu')
         self.assertEqual(gpus[0]['Default'], True)
 
         # process = subprocess.Popen(['gdbus', 'introspect', '--system', '--dest', 'net.hadess.SwitcherooControl', '--object-path', '/net/hadess/SwitcherooControl'])
@@ -396,17 +411,23 @@ class Tests(dbusmock.DBusTestCase):
         gpu = gpus[0]
         self.assertEqual(gpu['Name'], 'GM108M [GeForce 930MX]')
         sc_env = gpu['Environment']
-        self.assertEqual(len(sc_env), 2)
+        self.assertEqual(len(sc_env), 4)
         self.assertEqual(sc_env[0], 'DRI_PRIME')
         self.assertEqual(sc_env[1], 'pci-0000_01_00_0')
+        self.assertEqual(sc_env[2], 'MESA_VK_DEVICE_SELECT')
+        self.assertEqual(sc_env[3], 'pci-0000_01_00_0')
         self.assertEqual(gpu['Default'], False)
 
         gpu = gpus[1]
         self.assertEqual(gpu['Name'], 'Intel® UHD Graphics 620 (Kabylake GT2)')
         sc_env = gpu['Environment']
-        self.assertEqual(len(sc_env), 2)
+        self.assertEqual(len(sc_env), 6)
         self.assertEqual(sc_env[0], 'DRI_PRIME')
         self.assertEqual(sc_env[1], 'pci-0000_00_02_0')
+        self.assertEqual(sc_env[2], 'MESA_VK_DEVICE_SELECT')
+        self.assertEqual(sc_env[3], 'pci-0000_00_02_0')
+        self.assertEqual(sc_env[4], 'VK_LOADER_DRIVER_SELECT')
+        self.assertEqual(sc_env[5], '*intel*')
         self.assertEqual(gpu['Default'], True)
 
         # process = subprocess.Popen(['gdbus', 'introspect', '--system', '--dest', 'net.hadess.SwitcherooControl', '--object-path', '/net/hadess/SwitcherooControl'])
@@ -470,6 +491,7 @@ class Tests(dbusmock.DBusTestCase):
         self.assertIn('__GLX_VENDOR_LIBRARY_NAME', sc_env)
         self.assertIn('__NV_PRIME_RENDER_OFFLOAD', sc_env)
         self.assertIn('__VK_LAYER_NV_optimus', sc_env)
+        self.assertIn('VK_LOADER_DRIVER_SELECT', sc_env)
 
         def get_sc_env(name):
             i = sc_env.index(name)
@@ -478,6 +500,7 @@ class Tests(dbusmock.DBusTestCase):
         self.assertEqual(get_sc_env('__GLX_VENDOR_LIBRARY_NAME'), 'nvidia')
         self.assertEqual(get_sc_env('__NV_PRIME_RENDER_OFFLOAD'), '1')
         self.assertEqual(get_sc_env('__VK_LAYER_NV_optimus'), 'NVIDIA_only')
+        self.assertEqual(get_sc_env('VK_LOADER_DRIVER_SELECT'), '*nvidia*')
 
         self.stop_daemon()
 
@@ -512,7 +535,7 @@ class Tests(dbusmock.DBusTestCase):
 
         out = subprocess.run([tool_path], capture_output=True)
         self.assertEqual(out.returncode, 0, "'switcherooctl' call failed")
-        self.assertEqual(out.stdout, b'Device: 0\n  Name:        Intel\xc2\xae UHD Graphics 620 (Kabylake GT2)\n  Default:     yes\n  Environment: DRI_PRIME=pci-0000_00_02_0\n\nDevice: 1\n  Name:        GM108M [GeForce 930MX]\n  Default:     no\n  Environment: DRI_PRIME=pci-0000_01_00_0\n')
+        self.assertEqual(out.stdout.decode('UTF-8'), 'Device: 0\n  Name:        Intel® UHD Graphics 620 (Kabylake GT2)\n  Default:     yes\n  Environment: DRI_PRIME=pci-0000_00_02_0 MESA_VK_DEVICE_SELECT=pci-0000_00_02_0 VK_LOADER_DRIVER_SELECT=*intel*\n\nDevice: 1\n  Name:        GM108M [GeForce 930MX]\n  Default:     no\n  Environment: DRI_PRIME=pci-0000_01_00_0 MESA_VK_DEVICE_SELECT=pci-0000_01_00_0\n')
 
         out = subprocess.run([tool_path, 'launch', '--gpu', '0', 'env'], capture_output=True)
         self.assertEqual(out.returncode, 0, "'switcherooctl launch --gpu 0' failed")

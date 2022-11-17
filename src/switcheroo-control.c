@@ -255,14 +255,16 @@ get_card_env (GUdevClient *client,
 		g_ptr_array_add (array, g_strdup ("__VK_LAYER_NV_optimus"));
 		g_ptr_array_add (array, g_strdup ("NVIDIA_only"));
 	} else {
-		char *id;
+		const char *id;
 
-		/* See the Mesa loader code:
-		 * https://gitlab.freedesktop.org/mesa/mesa/blob/master/src/loader/loader.c#L322 */
-		id = g_strdup (g_udev_device_get_property (dev, "ID_PATH_TAG"));
+		/* See https://docs.mesa3d.org/envvars.html#envvar-DRI_PRIME and
+		 * https://docs.mesa3d.org/envvars.html#envvar-MESA_VK_DEVICE_SELECT */
+		id = g_udev_device_get_property (dev, "ID_PATH_TAG");
 		if (id != NULL) {
 			g_ptr_array_add (array, g_strdup ("DRI_PRIME"));
-			g_ptr_array_add (array, id);
+			g_ptr_array_add (array, g_strdup (id));
+			g_ptr_array_add (array, g_strdup ("MESA_VK_DEVICE_SELECT"));
+			g_ptr_array_add (array, g_strdup (id));
 		}
 	}
 

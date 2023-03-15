@@ -16,6 +16,11 @@ variables:
                 umockdev
   DIST_DEPENDENCIES: xz
 
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_PIPELINE_SOURCE == 'push'
+
 build:
   before_script:
     - dnf update -y --nogpgcheck && dnf install -y --nogpgcheck $DEPENDENCIES

@@ -1,4 +1,4 @@
-deps = [glib, gio, gudev, libdrm_amdgpu]
+deps = [glib, gio, gudev, libdrm, libdrm_nouveau, libdrm_amdgpu]
 
 sources = [
   'discrete-detection.c',
@@ -17,6 +17,9 @@ resources = gnome.compile_resources(
 )
 
 switcheroo_cargs = []
+if libdrm.found() and libdrm_nouveau.found()
+  switcheroo_cargs += '-DHAS_LIBDRM_NOUVEAU'
+endif
 if libdrm_amdgpu.found()
   switcheroo_cargs += '-DHAS_LIBDRM_AMDGPU'
 endif

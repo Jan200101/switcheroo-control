@@ -20,6 +20,7 @@
 #include <gudev/gudev.h>
 
 #include "info-cleanup.h"
+#include "discrete-detection.h"
 #include "switcheroo-control-resources.h"
 
 #define CONTROL_PROXY_DBUS_NAME          "net.hadess.SwitcherooControl"
@@ -359,7 +360,7 @@ get_card_data (GUdevClient *client,
 	data->name = get_card_name (d);
 	data->env = env;
 	data->is_default = get_card_is_default (d);
-	data->is_discrete = FALSE;
+	data->is_discrete = get_card_is_discrete (d);
 
 	return data;
 }

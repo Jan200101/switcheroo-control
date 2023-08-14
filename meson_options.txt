@@ -21,3 +21,9 @@ option('tests',
   type: 'boolean',
   value: false
 )
+
+option('libdrm_amdgpu',
+  description: 'Whether libdrm_amdgpu should be used to probe AMD GPUs',
+  type: 'feature',
+  value: 'auto'
+)

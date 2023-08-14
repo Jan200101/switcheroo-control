@@ -1,6 +1,8 @@
-deps = [glib, gio, gudev]
+deps = [glib, gio, gudev, libdrm_amdgpu]
 
 sources = [
+  'discrete-detection.c',
+  'discrete-detection.h',
   'info-cleanup.c',
   'info-cleanup.h',
   'switcheroo-control.c',
@@ -14,9 +16,16 @@ resources = gnome.compile_resources(
   export: true,
 )
 
+switcheroo_cargs = []
+if libdrm_amdgpu.found()
+  switcheroo_cargs += '-DHAS_LIBDRM_AMDGPU'
+endif
+
+
 executable('switcheroo-control',
   sources, resources,
   dependencies: deps,
+  c_args: switcheroo_cargs,
   install: true,
   install_dir: libexecdir,
 )

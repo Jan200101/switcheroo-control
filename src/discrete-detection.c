@@ -31,6 +31,9 @@ get_card_is_discrete_nvidia (GUdevDevice *d)
 	parent = g_udev_device_get_parent (d);
 	driver = g_udev_device_get_driver (parent);
 
+	if (g_strcmp0 (driver, "nvidia") == 0)
+		return TRUE;
+
 	if (g_strcmp0 (driver, "nouveau") != 0)
 		return FALSE;
 

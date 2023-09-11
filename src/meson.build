@@ -1,4 +1,4 @@
-deps = [glib, gio, gudev]
+deps = [glib, gio, gudev, libdrm, libdrm_nouveau, libdrm_amdgpu]
 
 sources = [
   'info-cleanup.c',
@@ -34,3 +34,5 @@ configure_file(
   configuration: switcherooctl_conf,
   install_dir: get_option('bindir')
 )
+
+subdir('discrete-detection')

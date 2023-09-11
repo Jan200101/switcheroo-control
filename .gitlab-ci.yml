@@ -3,6 +3,7 @@ image: fedora:rawhide
 variables:
   DEPENDENCIES: glib2-devel
                 libgudev-devel
+                libdrm-devel
                 gtk-doc
                 gcc
                 gcc-c++

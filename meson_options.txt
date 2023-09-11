@@ -10,6 +10,12 @@ option('hwdbdir',
   description: 'Directory for hwdb files',
 )
 
+option('rulesdir',
+  type: 'string',
+  value: '',
+  description: 'Directory for ruke files',
+)
+
 option('gtk_doc',
   type: 'boolean',
   value: false,
@@ -20,4 +26,22 @@ option('tests',
   description: 'Whether to run tests',
   type: 'boolean',
   value: false
+)
+
+option('libdrm',
+  description: 'Whether libdrm should be used to probe GPUs',
+  type: 'feature',
+  value: 'auto'
+)
+
+option('libdrm_nouveau',
+  description: 'Whether libdrm_nouveau should be used to probe Nvidia GPUs',
+  type: 'feature',
+  value: 'auto'
+)
+
+option('libdrm_amdgpu',
+  description: 'Whether libdrm_amdgpu should be used to probe AMD GPUs',
+  type: 'feature',
+  value: 'auto'
 )

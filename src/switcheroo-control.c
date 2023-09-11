@@ -31,6 +31,7 @@ typedef struct {
 	char *name;
 	GPtrArray *env;
 	gboolean is_default;
+	gboolean is_discrete;
 } CardData;
 
 typedef struct {
@@ -94,6 +95,8 @@ build_gpus_variant (ControlData *data)
 				       g_variant_new_strv ((const gchar * const *) card->env->pdata, card->env->len));
 		g_variant_builder_add (&asv_builder, "{sv}", "Default",
 				       g_variant_new_boolean (card->is_default));
+		g_variant_builder_add (&asv_builder, "{sv}", "Discrete",
+				       g_variant_new_boolean (card->is_discrete));
 
 		g_variant_builder_add (&builder, "a{sv}", &asv_builder);
 	}
@@ -340,6 +343,18 @@ get_card_is_default (GUdevDevice *d)
 	return g_udev_device_get_sysfs_attr_as_boolean (parent, "boot_vga");
 }
 
+static gboolean
+get_card_is_discrete (GUdevDevice *d)
+{
+	const char * const * tags;
+	g_autoptr (GUdevDevice) platform_device = NULL;
+
+	tags = g_udev_device_get_tags (d);
+	if (tags && g_strv_contains (tags, "switcheroo-discrete-gpu"))
+		return TRUE;
+	return FALSE;
+}
+
 static CardData *
 get_card_data (GUdevClient *client,
 	       GUdevDevice *d)
@@ -356,6 +371,7 @@ get_card_data (GUdevClient *client,
 	data->name = get_card_name (d);
 	data->env = env;
 	data->is_default = get_card_is_default (d);
+	data->is_discrete = get_card_is_discrete (d);
 
 	return data;
 }

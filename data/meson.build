@@ -17,3 +17,10 @@ install_data(
   '30-pci-intel-gpu.hwdb',
   install_dir: hwdb_dir,
 )
+
+configure_file(
+  input: '30-discrete-gpu.rules.in',
+  output: '30-discrete-gpu.rules',
+  configuration: data_conf,
+  install_dir: rules_dir,
+)

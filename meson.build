@@ -20,6 +20,9 @@ gnome = import('gnome')
 glib = dependency('glib-2.0', version: '>= 2.56.0')
 gio = dependency('gio-2.0', version: '>= 2.56.0')
 gudev = dependency('gudev-1.0', version: '>= 232')
+libdrm = dependency('libdrm', version: '>= 2.4.97', required: get_option('libdrm'))
+libdrm_nouveau = dependency('libdrm_nouveau', version: '>= 2.4.97', required: get_option('libdrm_nouveau'))
+libdrm_amdgpu = dependency('libdrm_amdgpu', version: '>= 2.4.97', required: get_option('libdrm_amdgpu'))
 
 systemd_systemunitdir = get_option('systemdsystemunitdir')
 if systemd_systemunitdir == ''
@@ -30,6 +33,12 @@ hwdb_dir = get_option('hwdbdir')
 if hwdb_dir == ''
   udevdir = dependency('udev').get_pkgconfig_variable('udevdir')
   hwdb_dir = udevdir / 'hwdb.d'
+endif
+
+rules_dir = get_option('rulesdir')
+if rules_dir == ''
+  udevdir = dependency('udev').get_pkgconfig_variable('udevdir')
+  rules_dir = udevdir / 'rules.d'
 endif
 
 # Make like license available in the build root for docs

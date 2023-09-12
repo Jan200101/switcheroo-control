@@ -1,4 +1,4 @@
-deps = [glib, gio, gudev, libdrm, libdrm_nouveau, libdrm_amdgpu]
+deps = [glib, gio, gudev]
 
 sources = [
   'info-cleanup.c',

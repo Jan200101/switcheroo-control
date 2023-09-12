@@ -1,6 +1,6 @@
 
 if libdrm_amdgpu.found()
-  executable('check-discrete-amdgpu',
+  amdgpu_discrete = executable('check-discrete-amdgpu',
     files('amdgpu.c'),
     dependencies: deps,
     install: true,
@@ -9,7 +9,7 @@ if libdrm_amdgpu.found()
 endif
 
 if libdrm.found() and libdrm_nouveau.found()
-  executable('check-discrete-nouveau',
+  nouveau_discrete = executable('check-discrete-nouveau',
     files('nouveau.c'),
     dependencies: deps,
     install: true,

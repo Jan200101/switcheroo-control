@@ -15,3 +15,5 @@ foreach ut: unit_tests
          env: envs,
         )
 endforeach
+
+subdir('discrete-detection')

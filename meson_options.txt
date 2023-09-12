@@ -13,7 +13,7 @@ option('hwdbdir',
 option('rulesdir',
   type: 'string',
   value: '',
-  description: 'Directory for ruke files',
+  description: 'Directory for rule files',
 )
 
 option('gtk_doc',

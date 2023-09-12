@@ -37,7 +37,7 @@ except ImportError as e:
 try:
     gi.require_version('UMockdev', '1.0')
     from gi.repository import UMockdev
-except ImportError:
+except (ImportError, ValueError):
     sys.stderr.write('Skipping tests, umockdev not available (https://github.com/martinpitt/umockdev)\n')
     sys.exit(0)
 

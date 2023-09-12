@@ -319,7 +319,6 @@ static gboolean
 get_card_is_discrete (GUdevDevice *d)
 {
 	const char * const * tags;
-	g_autoptr (GUdevDevice) platform_device = NULL;
 
 	tags = g_udev_device_get_tags (d);
 	if (tags && g_strv_contains (tags, "switcheroo-discrete-gpu"))

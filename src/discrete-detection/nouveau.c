@@ -1,9 +1,10 @@
-
 #include <fcntl.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <locale.h>
 #include <gio/gio.h>
 #include <gudev/gudev.h>
+#include <glib.h>
 
 #include <xf86drm.h>
 #include <nouveau_drm.h>
@@ -14,23 +15,34 @@
 typedef int handle;
 G_DEFINE_AUTO_CLEANUP_FREE_FUNC(handle, close, -1)
 
-int main(int argc, char** argv)
+int main (int argc, char** argv)
 {
-	if (argc < 2)
-	{
-		puts ("check-discrete-nouveau [DEVNAME]");
+	const gchar *devname = NULL;
+	g_auto(handle) fd = -1;
+	g_autofree void *device = NULL;
+	g_autoptr(GOptionContext) option_context = NULL;
+	g_autoptr(GError) error = NULL;
+
+	setlocale (LC_ALL, "");
+	option_context = g_option_context_new ("");
+
+	if (!g_option_context_parse (option_context, &argc, &argv, &error)) {
+		g_print ("Failed to parse arguments: %s\n", error->message);
 		return EXIT_FAILURE;
 	}
 
-	const char *devname;
-	g_auto(handle) fd = -1;
-
+	if (argc < 2)
+	{
+		g_print ("%s\n", g_option_context_get_help (option_context, TRUE, NULL));
+		return EXIT_FAILURE;
+	}
 	devname = argv[1];
+
 	fd = open (devname, O_RDWR);
 	if (fd < 0)
 		return EXIT_FAILURE;
 
-	g_autofree void *device = malloc(352);
+	device = malloc(352);
 
 	/* Init device */
 	{	
@@ -87,7 +99,6 @@ int main(int argc, char** argv)
 
 	if (drmCommandWriteRead (fd, DRM_NOUVEAU_NVIF, &args, sizeof(args)))
 		return EXIT_FAILURE;
-
 
 	switch (args.info.platform)
 	{

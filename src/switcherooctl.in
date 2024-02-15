@@ -77,6 +77,7 @@ def print_gpu(gpu, index):
     print('Device:', index)
     print('  Name:       ', gpu['Name'])
     print('  Default:    ', "yes" if gpu['Default'] else "no")
+    print('  Discrete:   ', "yes" if gpu['Discrete'] else "no")
     print('  Environment:', env_to_str(gpu['Environment']))
 
 def _list():
@@ -126,7 +127,7 @@ def get_discrete_gpu():
         return None
 
     try:
-        gpu = next(gpu for gpu in gpus if not gpu['Default'])
+        gpu = next(gpu for gpu in gpus if gpu['Discrete'])
     except StopIteration:
         return None
     else:
